@@ -127,8 +127,9 @@ class CharNet(nn.Module):
 
         self.block4 = self.build_DenseBlock(512, 512, 4)
         self.bc4 = nn.Conv2d(1024, 512, 1, stride=1)
+        self.pool = nn.MaxPool2d((2, 1), 2)
 
-        self.lastPool = nn.MaxPool2d([70, 1], 8)
+        self.lastPool = nn.MaxPool2d(1, 8)
         self.fc1 = nn.Linear(4096, 2048)
         self.fc2 = nn.Linear(2048, num_class)
 
@@ -147,7 +148,7 @@ class CharNet(nn.Module):
         x = self.trans1(self.bc1(self.block1(x)))
         x = self.trans2(self.bc2(self.block2(x)))
         x = self.trans3(self.bc3(self.block3(x)))
-        x = self.bc4(self.block4(x))
+        x = self.pool(self.bc4(self.block4(x)))
         x = self.lastPool(x)
         x = x.view(-1, 4096)
         x = nn.functional.relu((self.fc1(x)))
