@@ -16,7 +16,7 @@ There are some arguments
 
 | arguments | default |note|
 |:---:|:---:|:---:|
-|data_dir|'../dataset'||
+|data_dir|'../dataset/'||
 |pos_file|'rt-polarity.pos'||
 |neg_file|'rt-polarity.neg'||
 |val_dir|None||
@@ -48,7 +48,7 @@ There are some arguments
 
 | arguments | default |note|
 |:---:|:---:|:---:|
-|data_dir|'../dataset'||
+|data_dir|'../dataset/'||
 |pos_file|'rt-polarity.pos'||
 |neg_file|'rt-polarity.neg'||
 |val_dir|None||
