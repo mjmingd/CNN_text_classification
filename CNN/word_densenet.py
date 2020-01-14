@@ -6,7 +6,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from data import SampleDataset, WordProcessor
-from model import WordNet
+from model import WordDenseNet
 from utils import init_weights, acc, save_model
 import build_vocab
 
@@ -19,7 +19,6 @@ parser.add_argument('--val_pos_file', default=None)
 parser.add_argument('--val_neg_file', default=None)
 parser.add_argument('--model_dir', default='./model/')
 parser.add_argument('--num_class', default=2)
-parser.add_argument('--mode', default='word')
 parser.add_argument('--vocab', default='vocab.pkl')
 parser.add_argument('--batch_size', default=128)
 parser.add_argument('--seed', default=10)
@@ -119,7 +118,7 @@ if __name__ == '__main__':
         val_ds = SampleDataset(args.val_dir, args.val_pos_file, args.val_neg_file, word_tk.transform)
         val_dl = DataLoader(val_ds, batch_size=args.batch_size, shuffle=True, num_workers=0, drop_last=True)
 
-    net = WordNet(word_tk, args.num_class, vocab_config['max_seq_len'])
+    net = WordDenseNet(word_tk, args.num_class, vocab_config['max_seq_len'])
 
 
     net.apply(init_weights)

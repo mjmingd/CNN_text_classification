@@ -1,10 +1,38 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 
-class CharNet(nn.Module):
+class CharShallowNet(nn.Module):
+    def __init__(self, vocab_size, num_class, num_per_filters=700):
+        super(CharShallowNet, self).__init__()
+        self.nFilters = num_per_filters
+        self.vocab_size = vocab_size
+
+        # Shallow-Wide-net
+        self.Conv1 = nn.Conv2d(self.vocab_size, self.nFilters, (1, 15))
+        self.Conv2 = nn.Conv2d(self.vocab_size, self.nFilters, (1, 20))
+        self.Conv3 = nn.Conv2d(self.vocab_size, self.nFilters, (1, 25))
+
+        self._dropout = nn.Dropout(0.5)
+        self.fc = nn.Linear(self.nFilters * 3, num_class)
+
+    def forward(self, x):
+        x = x.permute(0, 1, 3, 2)
+        x1 = F.relu(self.Conv1(x))
+        x2 = F.relu(self.Conv2(x))
+        x3 = F.relu(self.Conv3(x))
+        out = torch.cat([x1.max(dim=-1)[0], x2.max(dim=-1)[0], x3.max(dim=-1)[0]], dim=-1)
+        out = self._dropout(out)
+        out = out.view(-1, self.nFilters * 3)
+        out = self.fc(out)
+
+        return out
+
+
+class CharDenseNet(nn.Module):
     def __init__(self, vocab_size, num_class):
-        super(CharNet, self).__init__()
+        super(CharDenseNet, self).__init__()
 
         # DenseNet
         self.tempConv1 = nn.Conv2d(vocab_size, 64, 3, stride=1, padding=1)  # [vocab_size, 3]
@@ -46,15 +74,50 @@ class CharNet(nn.Module):
         x = self.pool(self.bc4(self.block4(x)))
         x = self.lastPool(x)
         x = x.view(-1, 4096)
-        x = nn.functional.relu((self.fc1(x)))
+        x = F.relu((self.fc1(x)))
         out = self.fc2(x)
 
         return out
 
+class WordShallowNet(nn.Module):
+    def __init__(self, word_tk, num_class, max_seq_len, num_per_filters = 100, embedding_dim=300):
+        super(WordShallowNet, self).__init__()
+        self.emb_dim = embedding_dim
+        self.max_seq_len = max_seq_len
+        self.nFilters = num_per_filters
+        self.emb_static = nn.Embedding.from_pretrained(torch.from_numpy(word_tk.embedding),
+                                                       freeze=True, padding_idx=word_tk.vocab.to_indices(
+                word_tk.vocab.padding_token))
+        self.emb_non_static = nn.Embedding.from_pretrained(torch.from_numpy(word_tk.embedding),
+                                                           freeze=False, padding_idx=word_tk.vocab.to_indices(
+                word_tk.vocab.padding_token))
 
-class WordNet(nn.Module):
+        # Shallow-Wide-net
+        self.Conv1 = nn.Conv2d(self.max_seq_len, self.nFilters, (1, 3))
+        self.Conv2 = nn.Conv2d(self.max_seq_len, self.nFilters, (1, 4))
+        self.Conv3 = nn.Conv2d(self.max_seq_len, self.nFilters, (1, 5))
+
+        self._dropout = nn.Dropout(0.5)
+        self.fc = nn.Linear(self.nFilters * 3, num_class)
+
+    def forward(self, x):
+        static = self.emb_static(x).view(-1, self.max_seq_len, self.emb_dim, 1).permute(0, 1, 3, 2)
+        non_static = self.emb_non_static(x).view(-1, self.max_seq_len, self.emb_dim, 1).permute(0, 1, 3, 2)
+        x1 = F.relu(self.Conv1(static)) + F.relu(self.Conv1(non_static))
+        x2 = F.relu(self.Conv2(static)) + F.relu(self.Conv2(non_static))
+        x3 = F.relu(self.Conv3(static)) + F.relu(self.Conv3(non_static))
+        out = torch.cat([x1.max(dim=-1)[0], x2.max(dim=-1)[0], x3.max(dim=-1)[0]], dim=-1)
+        out = self._dropout(out)
+        out = out.view(-1, self.nFilters * 3)
+        out = self.fc(out)
+
+        return out
+
+
+
+class WordDenseNet(nn.Module):
     def __init__(self, word_tk, num_class, max_seq_len, embedding_dim=300):
-        super(WordNet, self).__init__()
+        super(WordDenseNet, self).__init__()
 
         self.emb_dim = embedding_dim
         self.max_seq_len = max_seq_len

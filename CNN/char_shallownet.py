@@ -4,7 +4,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from data import SampleDataset, CharProcessor
-from model import CharNet
+from model import CharShallowNet
 from utils import init_weights, acc, save_model
 import torchsummary
 
@@ -17,6 +17,7 @@ parser.add_argument('--val_pos_file', default=None)
 parser.add_argument('--val_neg_file', default=None)
 parser.add_argument('--model_dir', default='./model/')
 parser.add_argument('--num_class', default=2)
+parser.add_argument('--num_per_filters', default=700)
 parser.add_argument('--max_seq_len', default=1014)
 parser.add_argument('--batch_size', default=128)
 parser.add_argument('--seed', default=10)
@@ -50,8 +51,8 @@ def train_(model, train_dl, device, nEpoch, model_dir, checkpoint_name):
             train_loss += mb_loss.item()
             train_acc += mb_acc.item()
 
-            if step % 10 == 0 :
-                print('epoch : {}, step : {}, train_loss: {:.3f}, train_acc: {:.2%}'
+            #if step % 10 == 0 :
+            print('epoch : {}, step : {}, train_loss: {:.3f}, train_acc: {:.2%}'
                            .format(epoch+1, step + 1, mb_loss, mb_acc))
 
 
@@ -109,7 +110,7 @@ if __name__ == '__main__':
         val_ds = SampleDataset(args.val_dir, args.val_pos_file, args.val_neg_file, char_tk.transform)
         val_dl = DataLoader(val_ds, batch_size=args.batch_size, shuffle=True, num_workers=0, drop_last=True)
 
-    net = CharNet(char_tk.vocab_size, args.num_class)
+    net = CharShallowNet(char_tk.vocab_size, args.num_class, args.num_per_filters)
 
 
     net.apply(init_weights)
@@ -121,7 +122,7 @@ if __name__ == '__main__':
     loss_fn = nn.CrossEntropyLoss()
 
     writer = SummaryWriter('{}/runs'.format(args.model_dir))
-    checkpoint_name = 'char_Densenet'
+    checkpoint_name = 'char_Shallownet'
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     net.to(device)
