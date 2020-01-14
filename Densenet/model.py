@@ -79,7 +79,7 @@ class WordNet(nn.Module):
         self.bc4 = nn.Conv2d(1024, 512, 1, stride=1)
         self.pool = nn.MaxPool2d((8, 1), 2)
 
-        self.globalPool = nn.AdaptiveAvgPool3d((num_class, 1))
+        self.globalPool = nn.AdaptiveAvgPool2d(num_class)
 
     def build_DenseBlock(self, in_channels, out_channels, nBlocks=4):
         layers = []
@@ -101,7 +101,8 @@ class WordNet(nn.Module):
         x = self.trans2(self.bc2(self.block2(x)))
         x = self.trans3(self.bc3(self.block3(x)))
         x = self.pool(self.bc4(self.block4(x)))
-        out = self.globalPool(x)
+        x = self.globalPool(x)
+        out = x.view(x.size()[0],-1)
 
         return out
 

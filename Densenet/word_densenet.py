@@ -41,8 +41,6 @@ def train_(model, train_dl, device, nEpoch, model_dir, checkpoint_name):
 
             optimizer.zero_grad()
             y_hat_mb = model(x_mb)
-            print(y_hat_mb.shape)
-            print(y_mb.shape)
             mb_loss = loss_fn(y_hat_mb, y_mb)
             mb_loss.backward()
 
