@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from data import SampleDataset, CharProcessor
 from model import CharNet
-from utils import init_weights, acc, save_checkpoint
+from utils import init_weights, acc, save_model
 import torchsummary
 
 parser = argparse.ArgumentParser()
@@ -17,7 +17,6 @@ parser.add_argument('--val_pos_file', default=None)
 parser.add_argument('--val_neg_file', default=None)
 parser.add_argument('--model_dir', default='./model/')
 parser.add_argument('--num_class', default=2)
-parser.add_argument('--mode', default='char')
 parser.add_argument('--max_seq_len', default=1014)
 parser.add_argument('--batch_size', default=128)
 parser.add_argument('--seed', default=10)
@@ -67,8 +66,8 @@ def train_(model, train_dl, device, nEpoch, model_dir, checkpoint_name):
             print('epoch : {}, train_loss: {:.3f}, train_acc: {:.2%}'.format(epoch + 1, train_summary['loss'],
                                                                             train_summary['acc']))
             if args.val_dir is not None :
-                val_summary = evaluate(model, val_dl, {'loss': loss_fn}, device)
-                writer.add_scalars('loss', {'train': train_loss / (step + 1), 'val': val_loss}, epoch + 1)
+                val_summary = evaluate(model, val_dl, {'loss': loss_fn, 'acc': acc}, device)
+                writer.add_scalars('loss', {'train': train_loss / (step + 1), 'val': val_summary['loss']}, epoch + 1)
                 print('val_loss: {:.3f}, val_acc: {:.2%}'.format(val_summary['loss'],
                                                                                  val_summary['acc']))
 
@@ -81,6 +80,8 @@ def train_(model, train_dl, device, nEpoch, model_dir, checkpoint_name):
 def evaluate(model, data_loader, metrics, device):
     if model.training:
         model.eval()
+
+    summary = {metric: 0 for metric in metrics}
 
     for step, mb in enumerate(data_loader):
         x_mb, y_mb = map(lambda elm: elm.to(device), mb)

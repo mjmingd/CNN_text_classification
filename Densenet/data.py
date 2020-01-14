@@ -80,3 +80,36 @@ class CharProcessor:
 
     def transform(self, sent):
         return self.sent2tensor(self.pad_seq(list(sent)))
+
+class WordProcessor:
+    def __init__(self, vocab, max_seq_len, tokens_list=None, padding_token='<pad>',
+                 unknown_token='<unk>', unkown_token_idx=0):
+        self.vocab = vocab
+        self.vocab_size = len(vocab)
+        self.max_seq_len = max_seq_len
+        self.embedding = vocab.embedding.idx_to_vec.asnumpy()
+
+    def __len__(self, x):
+        return len(x)
+
+    def pad_seq(self, indices_list, pad_char='<pad>'):
+        if len(indices_list) < self.max_seq_len:
+            pad = [self.to_indices(pad_char)] * (self.max_seq_len - len(indices_list))
+            indices_list = indices_list + pad
+        else:
+            indices_list = indices_list[:self.max_seq_len]
+        return indices_list
+
+    def to_indices(self, tokens):
+        return self.vocab.to_indices(tokens)
+
+    def to_tokens(self, indices):
+        return self.vocab.to_tokens(indices)
+
+    def tokens2indices(self, tokens_list):
+        indices_list = self.to_indices(tokens_list)
+        indices_list = self.pad_seq(indices_list)
+        return indices_list
+
+    def transform(self, sent):
+        return torch.tensor(self.tokens2indices(sent.split()))
