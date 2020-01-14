@@ -18,12 +18,12 @@ parser.add_argument('--val_dir', default=None)
 parser.add_argument('--val_pos_file', default=None)
 parser.add_argument('--val_neg_file', default=None)
 parser.add_argument('--model_dir', default='./model/')
-parser.add_argument('--num_class', default=2)
+parser.add_argument('--num_class', default=2, type=int)
 parser.add_argument('--vocab', default='vocab.pkl')
-parser.add_argument('--batch_size', default=128)
-parser.add_argument('--seed', default=10)
-parser.add_argument('--learning_rate', default=0.001)
-parser.add_argument('--epochs', default=1)
+parser.add_argument('--batch_size', default=128, type=int)
+parser.add_argument('--seed', default=10, type=int)
+parser.add_argument('--learning_rate', default=0.001, type=int)
+parser.add_argument('--epochs', default=1, type=int)
 
 
 
