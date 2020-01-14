@@ -14,5 +14,5 @@ def acc(yhat, y):
         acc = (yhat == y).float().mean()
     return acc
 
-def save_model(state, model_dir, filename):
-    torch.save(state, model_dir + filename)
+def save_model(state, filepath):
+    torch.save(state, filepath)
